@@ -28,6 +28,8 @@ class ServerTab:
         self.config_path = tk.StringVar()
         self.server_port = tk.StringVar(value="27016")
         self.server_status = tk.StringVar(value="🔴 Offline")
+        
+        self.auto_restart = tk.BooleanVar(value=config.get("auto_restart", False) if config else False)
         self.process = None
         self.process_pid = None
         self.log_data = []
@@ -93,6 +95,12 @@ class ServerTab:
         tk.Button(control_frame, text="Export Log", command=self.export_log,
                   bg="#6c757d", fg="white", relief=tk.FLAT, font=large_font).pack(fill="x", pady=(10, 5))
 
+        tk.Checkbutton(control_frame, text="Auto-Restart on Crash",
+                       variable=self.auto_restart, bg=BG_COLOR,
+                       fg=FG_COLOR, selectcolor=BTN_COLOR,
+                       font=default_font,
+                       activebackground=BG_COLOR,
+                       activeforeground=FG_COLOR).pack(anchor="w", pady=(5, 5))
         label("Status:").pack(anchor="w", pady=(10, 0))
         self.status_label = tk.Label(control_frame, textvariable=self.server_status,
                                      fg="red", bg=BG_COLOR, font=("Segoe UI", 11, "bold"))
@@ -195,10 +203,15 @@ class ServerTab:
     def auto_refresh_status(self):
         if self.process and self.process.poll() is not None:
             self.set_status("🔴 Offline", "red")
+            if self.auto_restart.get():
+                self.log("[INFO] Server crashed. Restarting after delay.")
+                self.manager.root.after(3000, self.start_server)
         self.frame.after(2000, self.auto_refresh_status)
 
     def stop_server(self):
+        self.auto_restart.set(False)
         if self.process and self.process.poll() is None:
+            self.auto_restart.set(False)
             self.process.terminate()
             self.log("[ACTION] Server terminated.")
         self.set_status("🔴 Offline", "red")
@@ -246,7 +259,8 @@ class ServerTab:
             "+set", "net_port", port,
             "+map_rotate"
         ]
-
+        
+        self.log(f"[CMD] {' '.join(cmd)}")
         self.set_status("🔄 Starting...", "gray")
         self.log(f"[INFO] Launching on port {port}...")
 

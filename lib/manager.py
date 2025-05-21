@@ -3,6 +3,7 @@ import json
 import tkinter as tk
 from tkinter import ttk, simpledialog, messagebox
 from lib.server_tab import ServerTab
+from lib.features_tab import create_features_tab
 
 # Theme Colors
 BG_COLOR = "#1e1e1e"
@@ -20,7 +21,6 @@ class HMWServerManager:
         self.root.configure(bg=BG_COLOR)
         self.root.geometry("1000x700")
 
-        # Style configuration
         style = ttk.Style()
         style.theme_use("clam")
         style.configure("TNotebook", background=BG_COLOR, borderwidth=0)
@@ -33,7 +33,6 @@ class HMWServerManager:
                   background=[("selected", "#333333")],
                   foreground=[("selected", FG_COLOR)])
 
-        # Custom dark top bar
         topbar = tk.Frame(self.root, bg=BTN_COLOR, height=36, padx=10, pady=6)
         topbar.pack(fill="x", side="top")
 
@@ -51,6 +50,32 @@ class HMWServerManager:
         )
         servers_btn.pack(side="left", padx=(0, 10))
 
+        features_btn = tk.Menubutton(
+            topbar,
+            text="🧩 Features",
+            bg=BTN_COLOR,
+            fg=FG_COLOR,
+            activebackground="#444444",
+            activeforeground=FG_COLOR,
+            font=("Segoe UI", 11),
+            relief="flat",
+            highlightthickness=0,
+            borderwidth=0
+        )
+        features_btn.pack(side="left", padx=(0, 10))
+
+        features_menu = tk.Menu(
+            features_btn,
+            tearoff=0,
+            bg=BTN_COLOR,
+            fg=FG_COLOR,
+            activebackground="#444444",
+            activeforeground=FG_COLOR,
+            borderwidth=0
+        )
+        features_menu.add_command(label="📂 Open Features Tab", command=self.open_features_tab)
+        features_btn.config(menu=features_menu)
+
         server_menu = tk.Menu(
             servers_btn,
             tearoff=0,
@@ -65,7 +90,6 @@ class HMWServerManager:
         server_menu.add_command(label="❌ Close Current Tab", command=self.close_current_tab)
         servers_btn.config(menu=server_menu)
 
-        # Docked buttons with emojis
         tk.Button(
             topbar, text="🔁 Restart All", command=self.restart_all_servers,
             bg=ACCENT_COLOR, fg="white", font=("Segoe UI", 10), relief="flat"
@@ -77,7 +101,6 @@ class HMWServerManager:
             activebackground="#444", activeforeground=FG_COLOR
         ).pack(side="right", padx=5)
 
-        # Notebook
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(fill=tk.BOTH, expand=True, padx=6, pady=6)
 
@@ -119,7 +142,8 @@ class HMWServerManager:
                 "name": tab.name,
                 "exe": tab.executable_path.get(),
                 "cfg": tab.config_path.get(),
-                "port": tab.server_port.get()
+                "port": tab.server_port.get(),
+                "auto_restart": tab.auto_restart.get()
             })
         with open(SESSION_FILE, "w") as f:
             json.dump(session_data, f, indent=4)
@@ -151,3 +175,11 @@ class HMWServerManager:
             subprocess.Popen(["open", path])
         else:
             subprocess.Popen(["xdg-open", path])
+
+    def open_features_tab(self):
+        if not hasattr(self, "_features_tab_created"):
+            features_tab = tk.Frame(self.notebook, bg=BG_COLOR)
+            create_features_tab(features_tab)
+            self.notebook.add(features_tab, text="🧩 Features")
+            self._features_tab_created = True
+            self.notebook.select(len(self.tabs))
