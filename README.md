@@ -77,6 +77,4 @@ HMWServerManager/
 
 - Each server must run on a **unique port**
 - server configs must reside in the same folder as `hmw-mod.exe`
-- Configs should include `set rcon_password` and a valid map rotation
-
 ---
