@@ -28,16 +28,13 @@ class ServerTab:
         self.config_path = tk.StringVar()
         self.server_port = tk.StringVar(value="27016")
         self.server_status = tk.StringVar(value="🔴 Offline")
-        
+
         self.auto_restart = tk.BooleanVar(value=config.get("auto_restart", False) if config else False)
         self.process = None
-        self.process_pid = None
         self.log_data = []
 
-        # memory/cpu tracking
         self.mem_data = []
         self.cpu_data = []
-        self.mem_max_line = None
         self.mem_max_points = 60
 
         if config:
@@ -48,12 +45,12 @@ class ServerTab:
         self.create_widgets()
         self.auto_refresh_status()
         self.update_resource_plots()
+
     def create_widgets(self):
         default_font = ("Segoe UI", 10)
         large_font = ("Segoe UI", 11)
         mono_font = ("Consolas", 11)
 
-        # Style for ttk tabs
         style = tk.ttk.Style()
         style.theme_use("default")
         style.configure("TNotebook", background=BG_COLOR, borderwidth=0)
@@ -70,8 +67,8 @@ class ServerTab:
             return tk.Label(control_frame, text=text, bg=BG_COLOR, fg=FG_COLOR, anchor="w", font=default_font)
 
         def entry(var):
-            return tk.Entry(control_frame, textvariable=var, bg=BTN_COLOR, fg=FG_COLOR, insertbackground=FG_COLOR,
-                            relief=tk.FLAT, font=default_font)
+            return tk.Entry(control_frame, textvariable=var, bg=BTN_COLOR, fg=FG_COLOR,
+                            insertbackground=FG_COLOR, relief=tk.FLAT, font=default_font)
 
         label("Server Executable:").pack(anchor="w")
         entry(self.executable_path).pack(fill="x")
@@ -101,6 +98,7 @@ class ServerTab:
                        font=default_font,
                        activebackground=BG_COLOR,
                        activeforeground=FG_COLOR).pack(anchor="w", pady=(5, 5))
+
         label("Status:").pack(anchor="w", pady=(10, 0))
         self.status_label = tk.Label(control_frame, textvariable=self.server_status,
                                      fg="red", bg=BG_COLOR, font=("Segoe UI", 11, "bold"))
@@ -141,7 +139,6 @@ class ServerTab:
         self.cpu_canvas = FigureCanvasTkAgg(self.fig_cpu, master=control_frame)
         self.cpu_canvas.get_tk_widget().pack(fill="x", pady=(0, 5))
 
-        # Right-side log area
         log_frame = tk.Frame(main_pane, bg=BG_COLOR)
         main_pane.add(log_frame)
 
@@ -211,7 +208,6 @@ class ServerTab:
     def stop_server(self):
         self.auto_restart.set(False)
         if self.process and self.process.poll() is None:
-            self.auto_restart.set(False)
             self.process.terminate()
             self.log("[ACTION] Server terminated.")
         self.set_status("🔴 Offline", "red")
@@ -245,21 +241,17 @@ class ServerTab:
             return
 
         used_ports.add(port)
-
         working_dir = os.path.dirname(exe)
-        dest_cfg = os.path.join(working_dir, "server-default.cfg")
-        if os.path.abspath(cfg) != os.path.abspath(dest_cfg):
-            shutil.copy(cfg, dest_cfg)
 
         cmd = [
             exe,
             "-dedicated",
             "-memoryfix",
-            "+exec", "server-default.cfg",
+            "+exec", os.path.basename(cfg),
             "+set", "net_port", port,
             "+map_rotate"
         ]
-        
+
         self.log(f"[CMD] {' '.join(cmd)}")
         self.set_status("🔄 Starting...", "gray")
         self.log(f"[INFO] Launching on port {port}...")
