@@ -176,7 +176,9 @@ class ServerTab:
             font=("Segoe UI", 11, "bold"),
         )
         self.status_label.pack(anchor="w")
-        # Memory Usage Graph
+
+        # Memory Graph
+        label("Memory Usage (MB):").pack(anchor="w", pady=(5, 0))
         self.fig_mem, self.ax_mem = plt.subplots(
             figsize=(3.6, 1.6), dpi=100, facecolor=BG_COLOR
         )
@@ -193,9 +195,18 @@ class ServerTab:
         )
         self.mem_canvas = FigureCanvasTkAgg(self.fig_mem, master=control_frame)
         self.mem_canvas.get_tk_widget().pack(fill="x", pady=(0, 5))
-        mplcursors.cursor(self.mem_line, hover=True)
 
-        # CPU Usage Graph
+        cursor = mplcursors.cursor(self.mem_line, hover=True)
+
+        @cursor.connect("add")
+        def on_hover(sel):
+            index = int(sel.index)
+            if 0 <= index < len(self.mem_data):
+                sel.annotation.set_text(f"{self.mem_data[index]:.1f} MB")
+                sel.annotation.arrow_patch.set_visible(False)
+
+        # CPU Graph
+        label("CPU Usage (%):").pack(anchor="w", pady=(5, 0))
         self.fig_cpu, self.ax_cpu = plt.subplots(
             figsize=(3.6, 1.6), dpi=100, facecolor=BG_COLOR
         )
@@ -211,7 +222,7 @@ class ServerTab:
         self.cpu_canvas = FigureCanvasTkAgg(self.fig_cpu, master=control_frame)
         self.cpu_canvas.get_tk_widget().pack(fill="x", pady=(0, 5))
 
-        # Log Output + RCON Sender
+        # Log + RCON
         log_frame = tk.Frame(main_pane, bg=BG_COLOR)
         main_pane.add(log_frame)
 
