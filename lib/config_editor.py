@@ -6,6 +6,7 @@ import re
 from datetime import datetime
 from difflib import unified_diff
 
+
 def get_frame(master):
     frame = tk.Frame(master, bg="#1e1e1e", padx=10, pady=10)
     current_file = {"path": None, "original": ""}
@@ -53,13 +54,20 @@ def get_frame(master):
                 text.tag_add("quote", f"{i}.{match.start()}", f"{i}.{match.end()}")
             for kw in ("set", "bind", "exec", "map_rotate"):
                 for match in re.finditer(rf"\b{kw}\b", line):
-                    text.tag_add("keyword", f"{i}.{match.start()}", f"{i}.{match.end()}")
+                    text.tag_add(
+                        "keyword", f"{i}.{match.start()}", f"{i}.{match.end()}"
+                    )
         text.tag_config("keyword", foreground=c["keyword"])
         text.tag_config("comment", foreground=c["comment"])
         text.tag_config("quote", foreground=c["quote"])
 
-    tk.Label(frame, text="📝 Config Editor", font=("Segoe UI", 14, "bold"),
-             fg=get_colors()["fg"], bg=get_colors()["bg"]).pack(pady=(0, 10))
+    tk.Label(
+        frame,
+        text="📝 Config Editor",
+        font=("Segoe UI", 14, "bold"),
+        fg=get_colors()["fg"],
+        bg=get_colors()["bg"],
+    ).pack(pady=(0, 10))
 
     text_frame = tk.Frame(frame, bg=get_colors()["bg"])
     text_frame.pack(fill="both", expand=True)
@@ -72,9 +80,14 @@ def get_frame(master):
 
     text = tk.Text(
         text_frame,
-        bg=get_colors()["text_bg"], fg=get_colors()["text_fg"], insertbackground=get_colors()["insert"],
-        font=("Consolas", 10), undo=True, wrap="none",
-        yscrollcommand=v_scroll.set, xscrollcommand=h_scroll.set
+        bg=get_colors()["text_bg"],
+        fg=get_colors()["text_fg"],
+        insertbackground=get_colors()["insert"],
+        font=("Consolas", 10),
+        undo=True,
+        wrap="none",
+        yscrollcommand=v_scroll.set,
+        xscrollcommand=h_scroll.set,
     )
     text.pack(side="left", fill="both", expand=True)
     v_scroll.config(command=text.yview)
@@ -88,15 +101,33 @@ def get_frame(master):
     search_frame = tk.Frame(frame, bg=get_colors()["bg"])
     search_frame.pack(fill="x", pady=(5, 5))
 
-    tk.Label(search_frame, text="Find:", bg=get_colors()["bg"], fg=get_colors()["fg"]).pack(side="left", padx=(3, 0))
+    tk.Label(
+        search_frame, text="Find:", bg=get_colors()["bg"], fg=get_colors()["fg"]
+    ).pack(side="left", padx=(3, 0))
     search_var = tk.StringVar()
-    tk.Entry(search_frame, textvariable=search_var, width=20,
-             font=("Segoe UI", 10), bg="#2b2b2b", fg="white", insertbackground="white").pack(side="left", padx=3)
+    tk.Entry(
+        search_frame,
+        textvariable=search_var,
+        width=20,
+        font=("Segoe UI", 10),
+        bg="#2b2b2b",
+        fg="white",
+        insertbackground="white",
+    ).pack(side="left", padx=3)
 
-    tk.Label(search_frame, text="Replace:", bg=get_colors()["bg"], fg=get_colors()["fg"]).pack(side="left", padx=(10, 0))
+    tk.Label(
+        search_frame, text="Replace:", bg=get_colors()["bg"], fg=get_colors()["fg"]
+    ).pack(side="left", padx=(10, 0))
     replace_var = tk.StringVar()
-    tk.Entry(search_frame, textvariable=replace_var, width=20,
-             font=("Segoe UI", 10), bg="#2b2b2b", fg="white", insertbackground="white").pack(side="left", padx=3)
+    tk.Entry(
+        search_frame,
+        textvariable=replace_var,
+        width=20,
+        font=("Segoe UI", 10),
+        bg="#2b2b2b",
+        fg="white",
+        insertbackground="white",
+    ).pack(side="left", padx=3)
 
     def search_text():
         text.tag_remove("highlight", "1.0", "end")
@@ -111,7 +142,9 @@ def get_frame(master):
             end_pos = f"{pos}+{len(term)}c"
             text.tag_add("highlight", pos, end_pos)
             start = end_pos
-        text.tag_config("highlight", background=get_colors()["highlight"], foreground="yellow")
+        text.tag_config(
+            "highlight", background=get_colors()["highlight"], foreground="yellow"
+        )
 
     def replace_text():
         term = search_var.get()
@@ -141,7 +174,9 @@ def get_frame(master):
         diff_and_confirm()
 
     def save_as():
-        path = filedialog.asksaveasfilename(defaultextension=".cfg", filetypes=[("Config Files", "*.cfg")])
+        path = filedialog.asksaveasfilename(
+            defaultextension=".cfg", filetypes=[("Config Files", "*.cfg")]
+        )
         if path:
             current_file["path"] = path
             do_save()
@@ -157,16 +192,24 @@ def get_frame(master):
             f.write(content)
         current_file["original"] = content
         update_status()
-        messagebox.showinfo("Saved", f"Saved to {current_file['path']}\nBackup: {backup_name}")
+        messagebox.showinfo(
+            "Saved", f"Saved to {current_file['path']}\nBackup: {backup_name}"
+        )
 
     def diff_and_confirm():
         original_lines = current_file["original"].splitlines(keepends=True)
         new_lines = text.get("1.0", "end").splitlines(keepends=True)
-        diff = list(unified_diff(original_lines, new_lines, fromfile='original', tofile='current'))
+        diff = list(
+            unified_diff(
+                original_lines, new_lines, fromfile="original", tofile="current"
+            )
+        )
         if not diff:
             do_save()
             return
-        confirm = messagebox.askyesno("Review Changes", "Changes detected. View diff before saving?")
+        confirm = messagebox.askyesno(
+            "Review Changes", "Changes detected. View diff before saving?"
+        )
         if confirm:
             diff_win = tk.Toplevel()
             diff_win.title("Diff Preview")
@@ -187,28 +230,80 @@ def get_frame(master):
     toolbar = tk.Frame(frame, bg=get_colors()["bg"])
     toolbar.pack(fill="x", pady=(5, 5))
 
-    tk.Button(toolbar, text="📂 Open", bg="#3a3a3a", fg="white", font=("Segoe UI", 10), command=open_cfg).pack(side="left", padx=5)
-    tk.Button(toolbar, text="💾 Save", bg="#3a3a3a", fg="white", font=("Segoe UI", 10), command=save_cfg).pack(side="left", padx=5)
-    tk.Button(toolbar, text="📝 Save As", bg="#3a3a3a", fg="white", font=("Segoe UI", 10), command=save_as).pack(side="left", padx=5)
-    tk.Button(toolbar, text="🔎 Find", bg="#3a3a3a", fg="white", font=("Segoe UI", 10), command=search_text).pack(side="left", padx=5)
-    tk.Button(toolbar, text="♻ Replace", bg="#3a3a3a", fg="white", font=("Segoe UI", 10), command=replace_text).pack(side="left", padx=5)
-    tk.Button(toolbar, text="🌗 Toggle Theme", bg="#3a3a3a", fg="white", font=("Segoe UI", 10), command=toggle_theme).pack(side="left", padx=5)
+    tk.Button(
+        toolbar,
+        text="📂 Open",
+        bg="#3a3a3a",
+        fg="white",
+        font=("Segoe UI", 10),
+        command=open_cfg,
+    ).pack(side="left", padx=5)
+    tk.Button(
+        toolbar,
+        text="💾 Save",
+        bg="#3a3a3a",
+        fg="white",
+        font=("Segoe UI", 10),
+        command=save_cfg,
+    ).pack(side="left", padx=5)
+    tk.Button(
+        toolbar,
+        text="📝 Save As",
+        bg="#3a3a3a",
+        fg="white",
+        font=("Segoe UI", 10),
+        command=save_as,
+    ).pack(side="left", padx=5)
+    tk.Button(
+        toolbar,
+        text="🔎 Find",
+        bg="#3a3a3a",
+        fg="white",
+        font=("Segoe UI", 10),
+        command=search_text,
+    ).pack(side="left", padx=5)
+    tk.Button(
+        toolbar,
+        text="♻ Replace",
+        bg="#3a3a3a",
+        fg="white",
+        font=("Segoe UI", 10),
+        command=replace_text,
+    ).pack(side="left", padx=5)
+    tk.Button(
+        toolbar,
+        text="🌗 Toggle Theme",
+        bg="#3a3a3a",
+        fg="white",
+        font=("Segoe UI", 10),
+        command=toggle_theme,
+    ).pack(side="left", padx=5)
 
     # === Status Bar ===
     status_var = tk.StringVar()
-    status_bar = tk.Label(frame, textvariable=status_var, anchor="w",
-                          font=("Segoe UI", 9), bg=get_colors()["status"], fg="gray")
+    status_bar = tk.Label(
+        frame,
+        textvariable=status_var,
+        anchor="w",
+        font=("Segoe UI", 9),
+        bg=get_colors()["status"],
+        fg="gray",
+    )
     status_bar.pack(fill="x", side="bottom", pady=(5, 0))
 
     def update_status():
         status = current_file["path"] or "No file loaded"
-        modified = "(modified)" if text.get("1.0", "end") != current_file["original"] else ""
+        modified = (
+            "(modified)" if text.get("1.0", "end") != current_file["original"] else ""
+        )
         status_var.set(f"{status} {modified}")
 
     def warn_unsaved_close():
         current = text.get("1.0", "end")
         if current != current_file["original"]:
-            if not messagebox.askyesno("Unsaved Changes", "You have unsaved changes. Close anyway?"):
+            if not messagebox.askyesno(
+                "Unsaved Changes", "You have unsaved changes. Close anyway?"
+            ):
                 return
         frame.destroy()
 

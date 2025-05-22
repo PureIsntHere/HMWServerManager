@@ -3,16 +3,29 @@ import socket
 import asyncio
 import threading
 
+
 def get_frame(master):
     frame = tk.Frame(master, bg="#1e1e1e", padx=20, pady=20)
 
-    tk.Label(frame, text="📡 Port Availability Scanner", font=("Segoe UI", 14, "bold"),
-             fg="white", bg="#1e1e1e").pack(pady=(0, 10))
+    tk.Label(
+        frame,
+        text="📡 Port Availability Scanner",
+        font=("Segoe UI", 14, "bold"),
+        fg="white",
+        bg="#1e1e1e",
+    ).pack(pady=(0, 10))
 
-    tk.Label(frame, text="Enter ports to scan (e.g. 27016-27020 or 27016,27018):",
-             font=("Segoe UI", 10), fg="#bbbbbb", bg="#1e1e1e").pack(anchor="w")
+    tk.Label(
+        frame,
+        text="Enter ports to scan (e.g. 27016-27020 or 27016,27018):",
+        font=("Segoe UI", 10),
+        fg="#bbbbbb",
+        bg="#1e1e1e",
+    ).pack(anchor="w")
 
-    entry = tk.Entry(frame, font=("Segoe UI", 10), bg="#2b2b2b", fg="white", insertbackground="white")
+    entry = tk.Entry(
+        frame, font=("Segoe UI", 10), bg="#2b2b2b", fg="white", insertbackground="white"
+    )
     entry.insert(0, "27016-27020")
     entry.pack(fill="x", pady=(0, 5))
 
@@ -20,13 +33,19 @@ def get_frame(master):
     host_frame = tk.Frame(frame, bg="#1e1e1e")
     host_frame.pack(anchor="w", pady=(5, 10))
 
-    tk.Label(host_frame, text="Host:", bg="#1e1e1e", fg="white").pack(side="left", padx=(0, 5))
+    tk.Label(host_frame, text="Host:", bg="#1e1e1e", fg="white").pack(
+        side="left", padx=(0, 5)
+    )
     host_menu = tk.OptionMenu(host_frame, host_var, "127.0.0.1", "0.0.0.0", "localhost")
-    host_menu.config(bg="#2b2b2b", fg="white", font=("Segoe UI", 10), highlightthickness=0)
+    host_menu.config(
+        bg="#2b2b2b", fg="white", font=("Segoe UI", 10), highlightthickness=0
+    )
     host_menu["menu"].config(bg="#2b2b2b", fg="white")
     host_menu.pack(side="left")
 
-    result_box = tk.Text(frame, height=12, bg="#252526", fg="white", font=("Consolas", 10), wrap="none")
+    result_box = tk.Text(
+        frame, height=12, bg="#252526", fg="white", font=("Consolas", 10), wrap="none"
+    )
     result_box.pack(fill="both", expand=True)
 
     def parse_ports(raw):
@@ -70,15 +89,21 @@ def get_frame(master):
                 result_box.insert("end", "[ERROR] No valid ports to scan.\n")
                 return
 
-            result_box.insert("end", f"🔎 Scanning {len(ports)} port(s) on {host_var.get()}...\n\n")
+            result_box.insert(
+                "end", f"🔎 Scanning {len(ports)} port(s) on {host_var.get()}...\n\n"
+            )
 
             async def runner():
                 results = await scan_all_ports(host_var.get(), ports)
                 for port, is_free in results:
                     if is_free:
-                        result_box.insert("end", f"[🟢 FREE] Port {port} is available\n")
+                        result_box.insert(
+                            "end", f"[🟢 FREE] Port {port} is available\n"
+                        )
                     else:
-                        result_box.insert("end", f"[🔴 IN USE] Port {port} is occupied\n")
+                        result_box.insert(
+                            "end", f"[🔴 IN USE] Port {port} is occupied\n"
+                        )
 
             threading.Thread(target=lambda: asyncio.run(runner())).start()
 
@@ -108,11 +133,29 @@ def get_frame(master):
     control_frame = tk.Frame(frame, bg="#1e1e1e")
     control_frame.pack(fill="x", pady=(10, 0))
 
-    tk.Button(control_frame, text="🔍 Scan", font=("Segoe UI", 10),
-              bg="#3a3a3a", fg="white", command=start_async_scan).pack(side="left", padx=(0, 5))
-    tk.Button(control_frame, text="💡 Suggest", font=("Segoe UI", 10),
-              bg="#3a3a3a", fg="white", command=suggest_ports).pack(side="left", padx=(0, 5))
-    tk.Button(control_frame, text="🧠 From Tabs", font=("Segoe UI", 10),
-              bg="#3a3a3a", fg="white", command=scan_all_from_manager).pack(side="left")
+    tk.Button(
+        control_frame,
+        text="🔍 Scan",
+        font=("Segoe UI", 10),
+        bg="#3a3a3a",
+        fg="white",
+        command=start_async_scan,
+    ).pack(side="left", padx=(0, 5))
+    tk.Button(
+        control_frame,
+        text="💡 Suggest",
+        font=("Segoe UI", 10),
+        bg="#3a3a3a",
+        fg="white",
+        command=suggest_ports,
+    ).pack(side="left", padx=(0, 5))
+    tk.Button(
+        control_frame,
+        text="🧠 From Tabs",
+        font=("Segoe UI", 10),
+        bg="#3a3a3a",
+        fg="white",
+        command=scan_all_from_manager,
+    ).pack(side="left")
 
     return frame

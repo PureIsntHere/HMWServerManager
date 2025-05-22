@@ -2,6 +2,7 @@ import tkinter as tk
 import os
 import subprocess
 
+
 def get_frame(master):
     frame = tk.Frame(master, bg="#1e1e1e", padx=20, pady=20)
 
@@ -9,16 +10,27 @@ def get_frame(master):
     os.makedirs(log_dir, exist_ok=True)
     selected_file = tk.StringVar()
 
-    tk.Label(frame, text="🧯 Crash Logs Viewer", font=("Segoe UI", 14, "bold"),
-             fg="white", bg="#1e1e1e").pack(pady=(0, 10))
+    tk.Label(
+        frame,
+        text="🧯 Crash Logs Viewer",
+        font=("Segoe UI", 14, "bold"),
+        fg="white",
+        bg="#1e1e1e",
+    ).pack(pady=(0, 10))
 
-    search_entry = tk.Entry(frame, font=("Segoe UI", 10), bg="#2b2b2b", fg="white", insertbackground="white")
+    search_entry = tk.Entry(
+        frame, font=("Segoe UI", 10), bg="#2b2b2b", fg="white", insertbackground="white"
+    )
     search_entry.pack(fill="x", pady=(0, 5))
 
-    listbox = tk.Listbox(frame, height=8, bg="#2b2b2b", fg="white", font=("Consolas", 10))
+    listbox = tk.Listbox(
+        frame, height=8, bg="#2b2b2b", fg="white", font=("Consolas", 10)
+    )
     listbox.pack(fill="x", pady=(0, 5))
 
-    log_display = tk.Text(frame, height=14, bg="#252526", fg="white", font=("Consolas", 10), wrap="none")
+    log_display = tk.Text(
+        frame, height=14, bg="#252526", fg="white", font=("Consolas", 10), wrap="none"
+    )
     log_display.pack(fill="both", expand=True)
 
     def refresh_list():
@@ -78,10 +90,38 @@ def get_frame(master):
     button_frame = tk.Frame(frame, bg="#1e1e1e")
     button_frame.pack(fill="x", pady=(6, 0))
 
-    tk.Button(button_frame, text="🔍 Search", command=search_logs, bg="#3a3a3a", fg="white", font=("Segoe UI", 10)).pack(side="left", padx=4)
-    tk.Button(button_frame, text="📁 Open Location", command=open_in_folder, bg="#3a3a3a", fg="white", font=("Segoe UI", 10)).pack(side="left", padx=4)
-    tk.Button(button_frame, text="🗑 Delete", command=delete_log, bg="#aa3333", fg="white", font=("Segoe UI", 10)).pack(side="left", padx=4)
-    tk.Button(button_frame, text="🔄 Refresh", command=refresh_list, bg="#3a3a3a", fg="white", font=("Segoe UI", 10)).pack(side="left", padx=4)
+    tk.Button(
+        button_frame,
+        text="🔍 Search",
+        command=search_logs,
+        bg="#3a3a3a",
+        fg="white",
+        font=("Segoe UI", 10),
+    ).pack(side="left", padx=4)
+    tk.Button(
+        button_frame,
+        text="📁 Open Location",
+        command=open_in_folder,
+        bg="#3a3a3a",
+        fg="white",
+        font=("Segoe UI", 10),
+    ).pack(side="left", padx=4)
+    tk.Button(
+        button_frame,
+        text="🗑 Delete",
+        command=delete_log,
+        bg="#aa3333",
+        fg="white",
+        font=("Segoe UI", 10),
+    ).pack(side="left", padx=4)
+    tk.Button(
+        button_frame,
+        text="🔄 Refresh",
+        command=refresh_list,
+        bg="#3a3a3a",
+        fg="white",
+        font=("Segoe UI", 10),
+    ).pack(side="left", padx=4)
 
     refresh_list()
     return frame

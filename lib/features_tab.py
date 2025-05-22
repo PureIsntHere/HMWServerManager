@@ -7,6 +7,7 @@ from lib.backup_restore import get_frame as backup_restore_frame
 from lib.config_editor import get_frame as config_editor_frame
 from lib.port_scan import get_frame as port_scan_frame
 
+
 def create_features_tab(notebook):
     container = ttk.Notebook(notebook)
     container.configure(style="TNotebook")
@@ -17,7 +18,7 @@ def create_features_tab(notebook):
         ("🧯 Crash Logs", crash_report_frame),
         ("🗃 Backups", backup_restore_frame),
         ("📝 Config Editor", config_editor_frame),
-        ("📡 Port Scan", port_scan_frame)
+        ("📡 Port Scan", port_scan_frame),
     ]
 
     for label, get_frame in features:
@@ -26,7 +27,9 @@ def create_features_tab(notebook):
             container.add(frame, text=label)
         except Exception as e:
             err_frame = tk.Frame(container, bg="red")
-            tk.Label(err_frame, text=f"Failed to load: {label}\n{e}", fg="white", bg="red").pack()
+            tk.Label(
+                err_frame, text=f"Failed to load: {label}\n{e}", fg="white", bg="red"
+            ).pack()
             container.add(err_frame, text=label)
 
     return container

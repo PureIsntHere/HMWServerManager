@@ -6,13 +6,21 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import os
 
+
 def get_frame(master):
     frame = tk.Frame(master, bg="#1e1e1e", padx=20, pady=20)
 
-    tk.Label(frame, text="📊 CPU + Memory Averages", font=("Segoe UI", 14, "bold"),
-             fg="white", bg="#1e1e1e").pack(pady=(0, 10))
+    tk.Label(
+        frame,
+        text="📊 CPU + Memory Averages",
+        font=("Segoe UI", 14, "bold"),
+        fg="white",
+        bg="#1e1e1e",
+    ).pack(pady=(0, 10))
 
-    stats_label = tk.Label(frame, text="", fg="lime", bg="#1e1e1e", font=("Segoe UI", 11))
+    stats_label = tk.Label(
+        frame, text="", fg="lime", bg="#1e1e1e", font=("Segoe UI", 11)
+    )
     stats_label.pack(pady=(5, 10))
 
     show_graph = tk.BooleanVar(value=True)
@@ -24,12 +32,26 @@ def get_frame(master):
     def redraw_immediate(*_):
         stats_label.config(text="Updating...")
 
-    tk.Checkbutton(toggle_frame, text="📈 Show Graph", variable=show_graph,
-                   bg="#1e1e1e", fg="white", selectcolor="#1e1e1e",
-                   font=("Segoe UI", 10), command=redraw_immediate).pack(side="left", padx=5)
-    tk.Checkbutton(toggle_frame, text="🧠 Per-Core CPU", variable=per_core,
-                   bg="#1e1e1e", fg="white", selectcolor="#1e1e1e",
-                   font=("Segoe UI", 10), command=redraw_immediate).pack(side="left", padx=5)
+    tk.Checkbutton(
+        toggle_frame,
+        text="📈 Show Graph",
+        variable=show_graph,
+        bg="#1e1e1e",
+        fg="white",
+        selectcolor="#1e1e1e",
+        font=("Segoe UI", 10),
+        command=redraw_immediate,
+    ).pack(side="left", padx=5)
+    tk.Checkbutton(
+        toggle_frame,
+        text="🧠 Per-Core CPU",
+        variable=per_core,
+        bg="#1e1e1e",
+        fg="white",
+        selectcolor="#1e1e1e",
+        font=("Segoe UI", 10),
+        command=redraw_immediate,
+    ).pack(side="left", padx=5)
 
     # Graph setup
     fig, ax = plt.subplots(figsize=(4.5, 2.2), dpi=100)
@@ -43,15 +65,10 @@ def get_frame(master):
     for spine in ax.spines.values():
         spine.set_visible(False)
 
-    mem_line, = ax.plot([], [], color="cyan", linewidth=1, label="RAM")
-    cpu_line, = ax.plot([], [], color="lime", linewidth=1, label="CPU")
+    (mem_line,) = ax.plot([], [], color="cyan", linewidth=1, label="RAM")
+    (cpu_line,) = ax.plot([], [], color="lime", linewidth=1, label="CPU")
 
-    overlay_lines = {
-        "cpu_avg": None,
-        "cpu_max": None,
-        "mem_avg": None,
-        "mem_max": None
-    }
+    overlay_lines = {"cpu_avg": None, "cpu_max": None, "mem_avg": None, "mem_max": None}
 
     ax.legend(loc="upper right", fontsize=8, facecolor="#2d2d2d", labelcolor="white")
 
@@ -98,10 +115,18 @@ def get_frame(master):
                     overlay_lines[key] = None
 
             # Add new overlay lines
-            overlay_lines["cpu_avg"] = ax.axhline(cpu_avg, color="lime", linestyle="--", linewidth=0.8)
-            overlay_lines["cpu_max"] = ax.axhline(cpu_max, color="green", linestyle=":", linewidth=0.8)
-            overlay_lines["mem_avg"] = ax.axhline(mem_avg, color="cyan", linestyle="--", linewidth=0.8)
-            overlay_lines["mem_max"] = ax.axhline(mem_max, color="blue", linestyle=":", linewidth=0.8)
+            overlay_lines["cpu_avg"] = ax.axhline(
+                cpu_avg, color="lime", linestyle="--", linewidth=0.8
+            )
+            overlay_lines["cpu_max"] = ax.axhline(
+                cpu_max, color="green", linestyle=":", linewidth=0.8
+            )
+            overlay_lines["mem_avg"] = ax.axhline(
+                mem_avg, color="cyan", linestyle="--", linewidth=0.8
+            )
+            overlay_lines["mem_max"] = ax.axhline(
+                mem_max, color="blue", linestyle=":", linewidth=0.8
+            )
 
             ax.set_xlim(0, max(60, len(cpu_data)))
             ymax = max(cpu_max, mem_max, 100)
@@ -124,8 +149,14 @@ def get_frame(master):
         except Exception as e:
             messagebox.showerror("Export Failed", str(e))
 
-    tk.Button(frame, text="💾 Export Stats", command=export_stats,
-              bg="#3a3a3a", fg="white", font=("Segoe UI", 10)).pack()
+    tk.Button(
+        frame,
+        text="💾 Export Stats",
+        command=export_stats,
+        bg="#3a3a3a",
+        fg="white",
+        font=("Segoe UI", 10),
+    ).pack()
 
     update()
     return frame
