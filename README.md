@@ -68,7 +68,8 @@ HMWServerManager/
 ---
 
 
-![image](https://github.com/user-attachments/assets/356ec2e8-c518-4fe6-a5b3-5f7cc13ab9b4)
+![image](https://github.com/user-attachments/assets/ecf256f9-d28c-4301-91c7-b224c027b384)
+
 
 
 
