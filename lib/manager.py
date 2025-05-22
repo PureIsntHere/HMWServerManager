@@ -5,7 +5,6 @@ from tkinter import ttk, simpledialog, messagebox
 from lib.server_tab import ServerTab
 from lib.features_tab import create_features_tab
 
-# Theme Colors
 BG_COLOR = "#1e1e1e"
 FG_COLOR = "#d4d4d4"
 BTN_COLOR = "#3a3a3a"
@@ -36,70 +35,34 @@ class HMWServerManager:
         topbar = tk.Frame(self.root, bg=BTN_COLOR, height=36, padx=10, pady=6)
         topbar.pack(fill="x", side="top")
 
-        servers_btn = tk.Menubutton(
-            topbar,
-            text="📂 Servers",
-            bg=BTN_COLOR,
-            fg=FG_COLOR,
-            activebackground="#444444",
-            activeforeground=FG_COLOR,
-            font=("Segoe UI", 11),
-            relief="flat",
-            highlightthickness=0,
-            borderwidth=0
-        )
+        servers_btn = tk.Menubutton(topbar, text="📂 Servers", bg=BTN_COLOR, fg=FG_COLOR,
+                                    activebackground="#444444", activeforeground=FG_COLOR,
+                                    font=("Segoe UI", 11), relief="flat", borderwidth=0)
         servers_btn.pack(side="left", padx=(0, 10))
 
-        features_btn = tk.Menubutton(
-            topbar,
-            text="🧩 Features",
-            bg=BTN_COLOR,
-            fg=FG_COLOR,
-            activebackground="#444444",
-            activeforeground=FG_COLOR,
-            font=("Segoe UI", 11),
-            relief="flat",
-            highlightthickness=0,
-            borderwidth=0
-        )
+        features_btn = tk.Menubutton(topbar, text="🧩 Features", bg=BTN_COLOR, fg=FG_COLOR,
+                                     activebackground="#444444", activeforeground=FG_COLOR,
+                                     font=("Segoe UI", 11), relief="flat", borderwidth=0)
         features_btn.pack(side="left", padx=(0, 10))
 
-        features_menu = tk.Menu(
-            features_btn,
-            tearoff=0,
-            bg=BTN_COLOR,
-            fg=FG_COLOR,
-            activebackground="#444444",
-            activeforeground=FG_COLOR,
-            borderwidth=0
-        )
+        features_menu = tk.Menu(features_btn, tearoff=0, bg=BTN_COLOR, fg=FG_COLOR,
+                                activebackground="#444444", activeforeground=FG_COLOR)
         features_menu.add_command(label="📂 Open Features Tab", command=self.open_features_tab)
         features_btn.config(menu=features_menu)
 
-        server_menu = tk.Menu(
-            servers_btn,
-            tearoff=0,
-            bg=BTN_COLOR,
-            fg=FG_COLOR,
-            activebackground="#444444",
-            activeforeground=FG_COLOR,
-            borderwidth=0
-        )
+        server_menu = tk.Menu(servers_btn, tearoff=0, bg=BTN_COLOR, fg=FG_COLOR,
+                              activebackground="#444444", activeforeground=FG_COLOR)
         server_menu.add_command(label="➕ Add New Server", command=self.add_server_tab)
         server_menu.add_command(label="✏️ Rename Current Tab", command=self.rename_current_tab)
         server_menu.add_command(label="❌ Close Current Tab", command=self.close_current_tab)
         servers_btn.config(menu=server_menu)
 
-        tk.Button(
-            topbar, text="🔁 Restart All", command=self.restart_all_servers,
-            bg=ACCENT_COLOR, fg="white", font=("Segoe UI", 10), relief="flat"
-        ).pack(side="right", padx=5)
+        tk.Button(topbar, text="🔁 Restart All", command=self.restart_all_servers,
+                  bg=ACCENT_COLOR, fg="white", font=("Segoe UI", 10), relief="flat").pack(side="right", padx=5)
 
-        tk.Button(
-            topbar, text="📁 Open Logs", command=self.open_logs_folder,
-            bg=BTN_COLOR, fg=FG_COLOR, font=("Segoe UI", 10), relief="flat",
-            activebackground="#444", activeforeground=FG_COLOR
-        ).pack(side="right", padx=5)
+        tk.Button(topbar, text="📁 Open Logs", command=self.open_logs_folder,
+                  bg=BTN_COLOR, fg=FG_COLOR, font=("Segoe UI", 10), relief="flat",
+                  activebackground="#444", activeforeground=FG_COLOR).pack(side="right", padx=5)
 
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(fill=tk.BOTH, expand=True, padx=6, pady=6)
@@ -115,6 +78,7 @@ class HMWServerManager:
         self.tabs.append(tab)
         self.notebook.add(tab.frame, text=f"🖥 {name}")
         self.notebook.select(len(self.tabs) - 1)
+        self.save_sessions()  # ✅ Save immediately
 
     def rename_current_tab(self):
         index = self.notebook.index(self.notebook.select())
@@ -122,6 +86,7 @@ class HMWServerManager:
         if name:
             self.tabs[index].name = name
             self.notebook.tab(index, text=f"🖥 {name}")
+            self.save_sessions()  # ✅ Save on rename
 
     def close_current_tab(self):
         index = self.notebook.index(self.notebook.select())
@@ -133,6 +98,7 @@ class HMWServerManager:
                 tab.process.terminate()
             self.notebook.forget(index)
             self.tabs.pop(index)
+            self.save_sessions()  # ✅ Save on close
 
     def save_sessions(self):
         os.makedirs(CONFIG_DIR, exist_ok=True)

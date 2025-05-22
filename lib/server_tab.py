@@ -32,6 +32,7 @@ class ServerTab:
         self.auto_restart = tk.BooleanVar(value=config.get("auto_restart", False) if config else False)
         self.process = None
         self.log_data = []
+        self.manual_stop = False
 
         self.mem_data = []
         self.cpu_data = []
@@ -45,17 +46,10 @@ class ServerTab:
         self.create_widgets()
         self.auto_refresh_status()
         self.update_resource_plots()
-
     def create_widgets(self):
         default_font = ("Segoe UI", 10)
         large_font = ("Segoe UI", 11)
         mono_font = ("Consolas", 11)
-
-        style = tk.ttk.Style()
-        style.theme_use("default")
-        style.configure("TNotebook", background=BG_COLOR, borderwidth=0)
-        style.configure("TNotebook.Tab", background=BTN_COLOR, foreground=FG_COLOR, font=large_font, padding=8)
-        style.map("TNotebook.Tab", background=[("selected", "#333333")])
 
         main_pane = tk.PanedWindow(self.frame, bg=BG_COLOR, sashwidth=2, sashrelief=tk.RAISED)
         main_pane.pack(fill=tk.BOTH, expand=True)
@@ -95,15 +89,12 @@ class ServerTab:
         tk.Checkbutton(control_frame, text="Auto-Restart on Crash",
                        variable=self.auto_restart, bg=BG_COLOR,
                        fg=FG_COLOR, selectcolor=BTN_COLOR,
-                       font=default_font,
-                       activebackground=BG_COLOR,
-                       activeforeground=FG_COLOR).pack(anchor="w", pady=(5, 5))
+                       font=default_font).pack(anchor="w", pady=(5, 5))
 
         label("Status:").pack(anchor="w", pady=(10, 0))
         self.status_label = tk.Label(control_frame, textvariable=self.server_status,
                                      fg="red", bg=BG_COLOR, font=("Segoe UI", 11, "bold"))
         self.status_label.pack(anchor="w")
-
         label("Memory Usage (MB):").pack(anchor="w", pady=(5, 0))
         self.fig_mem, self.ax_mem = plt.subplots(figsize=(3.6, 1.6), dpi=100, facecolor=BG_COLOR)
         self.ax_mem.set_facecolor("#2d2d2d")
@@ -119,11 +110,7 @@ class ServerTab:
         self.mem_canvas.get_tk_widget().pack(fill="x", pady=(0, 5))
 
         cursor = mplcursors.cursor(self.mem_line, hover=True)
-        def on_hover(sel):
-            index = int(sel.index)
-            sel.annotation.set_text(f"{self.mem_data[index]:.1f} MB")
-            sel.annotation.arrow_patch.set_visible(False)
-        cursor.connect("add", on_hover)
+        cursor.connect("add", lambda sel: sel.annotation.set_text(f"{self.mem_data[int(sel.index)]:.1f} MB"))
 
         label("CPU Usage (%):").pack(anchor="w", pady=(5, 0))
         self.fig_cpu, self.ax_cpu = plt.subplots(figsize=(3.6, 1.6), dpi=100, facecolor=BG_COLOR)
@@ -148,36 +135,27 @@ class ServerTab:
                                                     font=mono_font, wrap="word")
         self.log_output.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         self.log_output.config(state="disabled")
-
     def update_resource_plots(self):
         if self.process and self.process.poll() is None:
             try:
                 proc = psutil.Process(self.process.pid)
                 mem = proc.memory_info().rss / 1024 / 1024
                 cpu = proc.cpu_percent(interval=None)
-
                 self.mem_data.append(mem)
                 self.cpu_data.append(cpu)
-
                 if len(self.mem_data) > self.mem_max_points:
                     self.mem_data.pop(0)
                     self.cpu_data.pop(0)
-
-                x_range = range(len(self.mem_data))
-                self.mem_line.set_data(x_range, self.mem_data)
-                self.mem_max_line.set_data(x_range, [max(self.mem_data)] * len(self.mem_data))
+                x = range(len(self.mem_data))
+                self.mem_line.set_data(x, self.mem_data)
+                self.mem_max_line.set_data(x, [max(self.mem_data)] * len(self.mem_data))
                 self.ax_mem.set_ylim(0, max(64, max(self.mem_data) * 1.25))
-                self.ax_mem.set_xlim(0, self.mem_max_points)
                 self.mem_canvas.draw()
-
-                self.cpu_line.set_data(range(len(self.cpu_data)), self.cpu_data)
-                self.ax_cpu.set_xlim(0, self.mem_max_points)
+                self.cpu_line.set_data(x, self.cpu_data)
                 self.cpu_canvas.draw()
-
             except Exception as e:
                 import traceback
                 self.log("[ERROR] Resource monitor:\n" + traceback.format_exc())
-
         self.frame.after(2000, self.update_resource_plots)
 
     def browse_executable(self):
@@ -193,24 +171,53 @@ class ServerTab:
     def set_status(self, status_text, color):
         self.server_status.set(status_text)
         self.status_label.config(fg=color)
-        index = self.manager.tabs.index(self)
-        emoji = "🟢" if "Online" in status_text else "🟠" if "Timeout" in status_text else "🔴"
-        self.manager.notebook.tab(index, text=f"{emoji} {self.name}")
-
+        if "Online" in status_text:
+            emoji = "🟢"
+        elif "Timeout" in status_text:
+            emoji = "🟠"
+        elif "Stopped" in status_text:
+            emoji = "⏹"
+        elif "Crashed" in status_text:
+            emoji = "🟠"
+        else:
+            emoji = "🔴"
+        self.manager.notebook.tab(self.manager.tabs.index(self), text=f"{emoji} {self.name}")
     def auto_refresh_status(self):
         if self.process and self.process.poll() is not None:
-            self.set_status("🔴 Offline", "red")
-            if self.auto_restart.get():
-                self.log("[INFO] Server crashed. Restarting after delay.")
-                self.manager.root.after(3000, self.start_server)
+            if self.manual_stop:
+                self.set_status("⏹ Stopped", "gray")
+            else:
+                self.set_status("🟠 Crashed", "orange")
+                if self.process.returncode not in (0, None):
+                    crash_dir = os.path.join(LOG_DIR, "crashes")
+                    os.makedirs(crash_dir, exist_ok=True)
+                    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                    crash_file = os.path.join(crash_dir, f"{self.name.replace(' ', '_')}_crash_{timestamp}.log")
+                    with open(crash_file, "w", encoding="utf-8") as f:
+                        f.write("\n".join(self.log_data))
+                    self.log(f"[CRASH] Crash log saved to {crash_file}")
+                if self.auto_restart.get():
+                    self.log("[INFO] Server crashed. Restarting after delay.")
+                    self.manager.root.after(3000, self.start_server)
+            self.manual_stop = False
         self.frame.after(2000, self.auto_refresh_status)
 
     def stop_server(self):
+        self.manual_stop = True
         self.auto_restart.set(False)
+
         if self.process and self.process.poll() is None:
             self.process.terminate()
-            self.log("[ACTION] Server terminated.")
-        self.set_status("🔴 Offline", "red")
+            self.log("[ACTION] Server manually stopped.")
+            try:
+                self.process.wait(timeout=5)  # wait up to 5 seconds
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+                self.log("[WARN] Server didn't terminate cleanly. Force killed.")
+
+        self.set_status("⏹ Stopped", "gray")
+        self.process = None  # ✅ Prevent crash detection
+
 
     def log(self, message):
         timestamp = datetime.now().strftime("[%H:%M:%S] ")
@@ -271,10 +278,9 @@ class ServerTab:
                     if "Server started!" in line:
                         self.set_status("🟢 Online", "green")
                 used_ports.discard(port)
-                self.set_status("🔴 Offline", "red")
             except Exception as e:
                 self.log(f"[ERROR] {e}")
                 used_ports.discard(port)
-                self.set_status("🔴 Offline", "red")
+                self.set_status("🟠 Crashed", "orange")
 
         threading.Thread(target=run, daemon=True).start()
