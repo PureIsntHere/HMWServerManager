@@ -294,8 +294,9 @@ class ServerTab:
 
     def export_log(self):
         os.makedirs(LOG_DIR, exist_ok=True)
+        safe_name = re.sub(r'[\\/*?:"<>|]', "_", self.name)
         file_path = os.path.join(
-            LOG_DIR, f"{self.name.replace(' ', '_')}_manual_export.txt"
+            LOG_DIR, f"{safe_name.replace(' ', '_')}_manual_export.txt"
         )
         with open(file_path, "w", encoding="utf-8") as f:
             f.write("\n".join(self.log_data))
