@@ -58,9 +58,11 @@ class ServerTab:
         self.update_resource_plots()
 
     def get_daily_log_path(self):
+        safe_name = re.sub(r'[\\/*?:"<>|]', "_", self.name)
         return os.path.join(
-            LOG_DIR, f"{self.name.replace(' ', '_')}_{self.current_log_date}.log"
+            LOG_DIR, f"{safe_name.replace(' ', '_')}_{self.current_log_date}.log"
         )
+
 
     def parse_rcon_password(self, cfg_path):
         try:
